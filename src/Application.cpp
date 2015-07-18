@@ -43,7 +43,7 @@ fullscreen(0)
 	guiResolution.setPosition(5.f, 95.f);
 	guiResolution.setCharacterSize(12u);
 
-	createWindow(1024, 800, false);
+	createWindow(800, 600, false);
 }
 
 Application::~Application()
@@ -144,6 +144,8 @@ void Application::run()
 		window.draw(guiMouseWorldPosition);
 		window.draw(guiTile);
 		window.draw(guiResolution);
+		
+		sfgui.Display(window);
 
         window.display();
 

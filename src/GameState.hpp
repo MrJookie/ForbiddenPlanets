@@ -22,6 +22,7 @@ class GameState : public State
 {
 public:
 	GameState(Application* game);
+	~GameState();
 
 private:
 	void draw(const float dt);
@@ -47,9 +48,7 @@ private:
 
 	TileMap map;
 	Player player;
-
-	sfg::SFGUI sfgui;
-	sfg::Window::Ptr guiwindow;
+	
 	sfg::Desktop desktop;
 };
 

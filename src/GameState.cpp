@@ -36,8 +36,6 @@ void GameState::loadGui()
 	window2->SetTitle("Hue hue hue hue Hue hue hue hue Hue hue hue hue");
 	window2->SetPosition(sf::Vector2f(500.f, 200.f));
 
-	guiwindow = sfg::Window::Create();
-	guiwindow->SetTitle("Title");
 	auto box = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL);
 
 	auto button1 = sfg::Button::Create();
@@ -132,9 +130,8 @@ void GameState::update(const float dt)
 
 	map.update(gridView);
 	player.update(dt);
-
-	//guiwindow->Update(0.f);
-	desktop.Update(5.f);
+	
+	desktop.Update(0.f);
 }
 
 void GameState::moveScreen()
@@ -194,6 +191,7 @@ void GameState::handleInput()
         {
             case sf::Event::Closed:
             {
+				
                 game->window.close();
                 break;
             }
@@ -253,11 +251,11 @@ void GameState::makeScreenshot()
 	{
 		std::string screenshotName = "Forbidden_Planets_" + std::to_string(tm_p->tm_year + 1900) + "-" + std::to_string(tm_p->tm_mon) + "-" + std::to_string(tm_p->tm_mday) + "_" + std::to_string(tm_p->tm_hour) + "-" + std::to_string(tm_p->tm_min) + "-" + std::to_string(tm_p->tm_sec);
 
-		#if defined(_WIN32)
-			_mkdir("screenshots");
-		#else 
-			mkdir("screenshots", 0777);
-		#endif
+		//#if defined(_WIN32)
+		//	_mkdir("screenshots");
+		//#else 
+		//	mkdir("screenshots", 0777);
+		//#endif
 
 		if (screenshot.saveToFile("screenshots/" + screenshotName + ".png"))
 		{
@@ -352,6 +350,4 @@ void GameState::draw(const float dt)
 	game->window.draw(player);
 
 	game->window.setView(guiView);
-
-	sfgui.Display(game->window);
 }
