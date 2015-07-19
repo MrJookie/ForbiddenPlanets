@@ -110,6 +110,8 @@ void Application::run()
 {
 	//pushState(new MenuState(this));
 	pushState(new GameState(this));
+	
+	sfg::SFGUI sfgui;
 
     sf::Clock clock;
 

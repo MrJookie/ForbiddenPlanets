@@ -49,8 +49,6 @@ private:
 	sf::Text guiFPS;
 	sf::Time updateTime;
 	std::size_t updateNumFrames;
-	
-	sfg::SFGUI sfgui;
 };
 
 #endif /* APPLICATION_HPP_ */

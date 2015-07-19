@@ -57,7 +57,49 @@ bool TileMap::loadFromFile(std::string fileName)
 	}
 
 	//tilesets[0].tilesheet.setSmooth(true);
+	
+	//pixel manipulation
+	std::vector<int> mapTexture;
+	
+	//process tiles/pixel into temp 2D array GID->color
+	sf::Image image = tilesets[0].tilesheet.copyToImage();
+	
+	std::vector<std::vector<int>> gidToColors;
+	gidToColors.resize(image.getSize().x / tilewidth * image.getSize().y / tileheight);
+	
+	std::cout << gidToColors.size() << std::endl;
 
+	std::size_t colorGID = 0;
+	for(std::size_t tileY = 0; tileY < image.getSize().y / tileheight; ++tileY)
+	{
+		for(std::size_t tileX = 0; tileX < image.getSize().x / tilewidth; ++tileX)
+		{
+			for(std::size_t pixelY = 0; pixelY < tileheight; ++pixelY)
+			{
+				for(std::size_t pixelX = 0; pixelX < tilewidth; ++pixelX)
+				{
+					sf::Color pixelColor = image.getPixel(pixelX + (tilewidth * tileX), pixelY + (tileheight * tileY));
+					
+					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.r));
+					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.g));
+					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.b));
+					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.a));
+					
+					//std::cout << "pixelY: " << pixelY << " pixelX: " << pixelX << " --------------------------------------" << std::endl;
+				}
+			}
+			
+			colorGID++;
+		}
+	}
+	
+	int gidd = 0;
+	std::cout << gidd << std::endl;
+	std::cout << "color r: " << gidToColors[gidd][0] << std::endl;
+	std::cout << "color g: " << gidToColors[gidd][1] << std::endl;
+	std::cout << "color b: " << gidToColors[gidd][2] << std::endl;
+	std::cout << "color a: " << gidToColors[gidd][3] << std::endl;
+	
 	int x = 0;
 	int y = 0;
 
@@ -80,7 +122,7 @@ bool TileMap::loadFromFile(std::string fileName)
 
 		//resize 2D tile array
 		layer.tiles.resize(width);
-		for (int i = 0; i < height; ++i)
+		for (std::size_t i = 0; i < height; ++i)
 			layer.tiles[i].resize(height);
 
 		xml_node<>* layerDataElement;
@@ -149,7 +191,16 @@ bool TileMap::loadFromFile(std::string fileName)
 				quad[2].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 1) * tileheight - 0.0075);
 				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
 			}
-
+			
+			//store into mapTexture
+			if(tileGID < colorGID)
+			{
+				mapTexture.push_back(gidToColors[tileGID][0]);
+				mapTexture.push_back(gidToColors[tileGID][1]);
+				mapTexture.push_back(gidToColors[tileGID][2]);
+				mapTexture.push_back(gidToColors[tileGID][3]);
+			}
+			
 			x++;
 			if (x == width)
 			{

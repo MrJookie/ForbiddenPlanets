@@ -251,11 +251,11 @@ void GameState::makeScreenshot()
 	{
 		std::string screenshotName = "Forbidden_Planets_" + std::to_string(tm_p->tm_year + 1900) + "-" + std::to_string(tm_p->tm_mon) + "-" + std::to_string(tm_p->tm_mday) + "_" + std::to_string(tm_p->tm_hour) + "-" + std::to_string(tm_p->tm_min) + "-" + std::to_string(tm_p->tm_sec);
 
-		//#if defined(_WIN32)
-		//	_mkdir("screenshots");
-		//#else 
-		//	mkdir("screenshots", 0777);
-		//#endif
+		#if defined(_WIN32)
+			_mkdir("screenshots");
+		#else 
+			mkdir("screenshots", 0777);
+		#endif
 
 		if (screenshot.saveToFile("screenshots/" + screenshotName + ".png"))
 		{
