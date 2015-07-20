@@ -58,17 +58,12 @@ bool TileMap::loadFromFile(std::string fileName)
 
 	//tilesets[0].tilesheet.setSmooth(true);
 	
-	//pixel manipulation
-	std::vector<int> mapTexture;
-	
-	//process tiles/pixel into temp 2D array GID->color
+	//process tiles pixels into temp 2D array GID->color
 	sf::Image image = tilesets[0].tilesheet.copyToImage();
 	
-	std::vector<std::vector<int>> gidToColors;
+	std::vector<std::vector<sf::Color>> gidToColors;
 	gidToColors.resize(image.getSize().x / tilewidth * image.getSize().y / tileheight);
 	
-	std::cout << gidToColors.size() << std::endl;
-
 	std::size_t colorGID = 0;
 	for(std::size_t tileY = 0; tileY < image.getSize().y / tileheight; ++tileY)
 	{
@@ -80,10 +75,7 @@ bool TileMap::loadFromFile(std::string fileName)
 				{
 					sf::Color pixelColor = image.getPixel(pixelX + (tilewidth * tileX), pixelY + (tileheight * tileY));
 					
-					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.r));
-					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.g));
-					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.b));
-					gidToColors[colorGID].push_back(static_cast<int>(pixelColor.a));
+					gidToColors[colorGID].push_back(pixelColor);
 					
 					//std::cout << "pixelY: " << pixelY << " pixelX: " << pixelX << " --------------------------------------" << std::endl;
 				}
@@ -93,13 +85,17 @@ bool TileMap::loadFromFile(std::string fileName)
 		}
 	}
 	
+	//Color{x,x,x,0} = transparent
+	
 	int gidd = 0;
 	std::cout << gidd << std::endl;
-	std::cout << "color r: " << gidToColors[gidd][0] << std::endl;
-	std::cout << "color g: " << gidToColors[gidd][1] << std::endl;
-	std::cout << "color b: " << gidToColors[gidd][2] << std::endl;
-	std::cout << "color a: " << gidToColors[gidd][3] << std::endl;
+	std::cout << "color r: " << static_cast<int>(gidToColors[gidd][0].r) << std::endl;
+	std::cout << "color g: " << static_cast<int>(gidToColors[gidd][0].g) << std::endl;
+	std::cout << "color b: " << static_cast<int>(gidToColors[gidd][0].b) << std::endl;
+	std::cout << "color a: " << static_cast<int>(gidToColors[gidd][0].a) << std::endl;
 	
+	std::vector<std::vector<sf::Color>*> mapTexture;
+
 	int x = 0;
 	int y = 0;
 
@@ -107,6 +103,8 @@ bool TileMap::loadFromFile(std::string fileName)
 	const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
 	const unsigned FLIPPED_VERTICALLY_FLAG = 0x40000000;
 	const unsigned FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+	
+	int layerID = 0;
 
 	xml_node<>* layerElement;
 	layerElement = map->first_node("layer");
@@ -192,13 +190,14 @@ bool TileMap::loadFromFile(std::string fileName)
 				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
 			}
 			
-			//store into mapTexture
-			if(tileGID < colorGID)
+			
+			//copy only first layer's pointer tile to colors
+			if(layerID == 0)
 			{
-				mapTexture.push_back(gidToColors[tileGID][0]);
-				mapTexture.push_back(gidToColors[tileGID][1]);
-				mapTexture.push_back(gidToColors[tileGID][2]);
-				mapTexture.push_back(gidToColors[tileGID][3]);
+				if(tileGID < colorGID)
+				{
+					mapTexture.push_back(&gidToColors[tileGID]);
+				}
 			}
 			
 			x++;
@@ -212,8 +211,9 @@ bool TileMap::loadFromFile(std::string fileName)
 			
 			tileElement = tileElement->next_sibling("tile");
 		}
-
 		layers.push_back(layer);
+		
+		layerID++;
 
 		layerElement = layerElement->next_sibling("layer");
 	}

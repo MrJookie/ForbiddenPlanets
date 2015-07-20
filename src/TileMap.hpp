@@ -97,8 +97,6 @@ private:
 	std::vector<Tileset> tilesets;
 	std::vector<Layer> layers;
 	std::vector<Object> objects;
-	
-	std::vector<int> groundTexData;
 };
 
 #endif /* TILEMAP_HPP_ */
