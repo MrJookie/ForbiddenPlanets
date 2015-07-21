@@ -58,44 +58,9 @@ bool TileMap::loadFromFile(std::string fileName)
 
 	//tilesets[0].tilesheet.setSmooth(true);
 	
-	//process tiles pixels into temp 2D array GID->color
-	sf::Image image = tilesets[0].tilesheet.copyToImage();
+	std::vector<int> mapIndices;
+	mapIndices.reserve(width * height);
 	
-	std::vector<std::vector<sf::Color>> gidToColors;
-	gidToColors.resize(image.getSize().x / tilewidth * image.getSize().y / tileheight);
-	
-	std::size_t colorGID = 0;
-	for(std::size_t tileY = 0; tileY < image.getSize().y / tileheight; ++tileY)
-	{
-		for(std::size_t tileX = 0; tileX < image.getSize().x / tilewidth; ++tileX)
-		{
-			for(std::size_t pixelY = 0; pixelY < tileheight; ++pixelY)
-			{
-				for(std::size_t pixelX = 0; pixelX < tilewidth; ++pixelX)
-				{
-					sf::Color pixelColor = image.getPixel(pixelX + (tilewidth * tileX), pixelY + (tileheight * tileY));
-					
-					gidToColors[colorGID].push_back(pixelColor);
-					
-					//std::cout << "pixelY: " << pixelY << " pixelX: " << pixelX << " --------------------------------------" << std::endl;
-				}
-			}
-			
-			colorGID++;
-		}
-	}
-	
-	//Color{x,x,x,0} = transparent
-	
-	int gidd = 0;
-	std::cout << gidd << std::endl;
-	std::cout << "color r: " << static_cast<int>(gidToColors[gidd][0].r) << std::endl;
-	std::cout << "color g: " << static_cast<int>(gidToColors[gidd][0].g) << std::endl;
-	std::cout << "color b: " << static_cast<int>(gidToColors[gidd][0].b) << std::endl;
-	std::cout << "color a: " << static_cast<int>(gidToColors[gidd][0].a) << std::endl;
-	
-	std::vector<std::vector<sf::Color>*> mapTexture;
-
 	int x = 0;
 	int y = 0;
 
@@ -184,20 +149,15 @@ bool TileMap::loadFromFile(std::string fileName)
 			}
 			else  //no rotation
 			{
-				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * tileheight);
+				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );tileheight);
 				quad[1].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 0) * tileheight);
 				quad[2].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 1) * tileheight - 0.0075);
 				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
 			}
 			
-			
-			//copy only first layer's pointer tile to colors
 			if(layerID == 0)
 			{
-				if(tileGID < colorGID)
-				{
-					mapTexture.push_back(&gidToColors[tileGID]);
-				}
+				mapIndices.push_back(tileGID);glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );
 			}
 			
 			x++;
@@ -275,6 +235,8 @@ bool TileMap::loadFromFile(std::string fileName)
 
 		objectgroupElement = objectgroupElement->next_sibling("objectgroup");
 	}
+	
+	//glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, &mapIndices[0] );
 
 	//stress MicroPather
 	//allocate 640x640 states
