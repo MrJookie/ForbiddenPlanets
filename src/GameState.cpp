@@ -8,7 +8,7 @@ screenMovementSpeed(1024)
 {
 	this->game = game;
 
-	map.loadFromFile("assets/planet001.tmx");
+	map.loadFromFile("assets/test.tmx");
 
 	onResize();
 	gridView.setCenter(0, 0); //edit this

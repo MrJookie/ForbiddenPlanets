@@ -58,6 +58,33 @@ bool TileMap::loadFromFile(std::string fileName)
 
 	//tilesets[0].tilesheet.setSmooth(true);
 	
+	sf::Image inputTexture = tilesets[0].tilesheet.copyToImage();
+	std::vector<sf::Uint8> tempTextureData;
+	tempTextureData.reserve(inputTexture.getSize().x * inputTexture.getSize().y * 4);
+	
+	for(std::size_t tileY = 0; tileY < inputTexture.getSize().y / tileheight; ++tileY)
+	{
+		for(std::size_t tileX = 0; tileX < inputTexture.getSize().x / tilewidth; ++tileX)
+		{
+			for(std::size_t pixelY = 0; pixelY < tileheight; ++pixelY)
+			{
+				for(std::size_t pixelX = 0; pixelX < tilewidth; ++pixelX)
+				{
+					sf::Color pixelColor = inputTexture.getPixel(32 * tileX + pixelX, 32 * tileY + pixelY);
+
+					tempTextureData.push_back(static_cast<int>(pixelColor.r));
+					tempTextureData.push_back(static_cast<int>(pixelColor.g));
+					tempTextureData.push_back(static_cast<int>(pixelColor.b));
+					tempTextureData.push_back(static_cast<int>(pixelColor.a));
+				}
+			}
+		}
+	}
+
+	sf::Image resultTexture;
+	resultTexture.create(inputTexture.getSize().x * inputTexture.getSize().y / 32, 32, &tempTextureData[0]);
+	resultTexture.saveToFile("assets/teeeeest.png");
+
 	std::vector<int> mapIndices;
 	mapIndices.reserve(width * height);
 	
