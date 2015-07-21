@@ -149,7 +149,7 @@ bool TileMap::loadFromFile(std::string fileName)
 			}
 			else  //no rotation
 			{
-				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );tileheight);
+				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * tileheight);
 				quad[1].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 0) * tileheight);
 				quad[2].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 1) * tileheight - 0.0075);
 				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
@@ -157,7 +157,7 @@ bool TileMap::loadFromFile(std::string fileName)
 			
 			if(layerID == 0)
 			{
-				mapIndices.push_back(tileGID);glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );
+				mapIndices.push_back(tileGID);
 			}
 			
 			x++;
@@ -236,7 +236,7 @@ bool TileMap::loadFromFile(std::string fileName)
 		objectgroupElement = objectgroupElement->next_sibling("objectgroup");
 	}
 	
-	//glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, &mapIndices[0] );
+	//glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );
 
 	//stress MicroPather
 	//allocate 640x640 states
