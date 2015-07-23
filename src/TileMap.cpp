@@ -543,31 +543,8 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	*/
 
 	
-	
-	
-	
-	for (const auto& object : objectsToDraw)
-	{
-		states.transform *= getTransform();
-		states.texture = &tilesets[0].tilesheet;
-		target.draw((*object).sprite, states);
-	}
-	
-	//~ glMatrixMode(GL_MODELVIEW);
-	//~ //glLoadMatrixf( states.transform.getMatrix() );
-	//~ glLoadMatrixf( target.getView().getTransform().getMatrix() );
-	//~ 
-	//~ const float *t = target.getView().getTransform().getMatrix();
-	//~ for(int i=0; i < 16; i++) {
-		//~ if(i % 4 == 0)
-			//~ cout << endl;
-		//~ cout << t[i] << " ";
-	//~ }
-	//~ cout << endl;
-	
-	//~ glMatrixMode( GL_MODELVIEW );
-	//~ glLoadIdentity();
-	//~ glMultMatrixf( states.transform.getMatrix() );
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf( target.getView().getTransform().getMatrix() );
 	
 	glUseProgram( shaders );
 	glBindVertexArray( vertexArrayObject );
@@ -579,6 +556,16 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	glDrawArrays(GL_QUADS, 0, 4);
     glBindVertexArray( 0 );
 	glUseProgram( 0 );
+	
+	
+	for (const auto& object : objectsToDraw)
+	{
+		//states.transform *= getTransform();
+		states.texture = &tilesets[0].tilesheet;
+		target.draw((*object).sprite, states);
+	}
+	
+	
 	
 	/*
 	sf::Texture texture;

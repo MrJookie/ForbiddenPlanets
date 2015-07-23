@@ -63,7 +63,7 @@ public:
 	bool visible;
 };
 
-class TileMap : public sf::Drawable, public sf::Transformable, public micropather::Graph
+class TileMap : public sf::Drawable, public micropather::Graph
 {
 public:
 	bool loadFromFile(std::string fileName);
