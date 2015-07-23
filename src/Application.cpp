@@ -68,7 +68,7 @@ void Application::createWindow(sf::Uint16 width, sf::Uint16 height, bool fullscr
 	else
 		window.create(sf::VideoMode(width, height), "Forbidden Planets");
 
-    window.setFramerateLimit(500);
+    window.setFramerateLimit(10000);
 	window.setKeyRepeatEnabled(true);
 	window.setVerticalSyncEnabled(false);
 }

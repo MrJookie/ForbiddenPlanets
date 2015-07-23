@@ -253,6 +253,7 @@ bool TileMap::loadFromFile(std::string fileName)
 	}
 	
 	int ntiles = mapMultiLayerToIndex.size();
+	m_ntiles = ntiles;
 	//~ cout << "ntiles: " << ntiles << " counter: " << indexCounter << endl;
 	//~ cout << 2048 << ", " << (((ntiles / 64)+1))*32 << endl;
 	m_tilesheet.create( 2048, ((ntiles / 64)+1)*32 );
@@ -310,7 +311,7 @@ bool TileMap::loadFromFile(std::string fileName)
 					p.g = p.g * k + q.g * o;
 					p.b = p.b * k + q.b * o;
 					//p.a = p.a * k + q.a * o;
-					p.a = 255;
+					//p.a = 255;
 					//~ p=q;
 				}
 			}
@@ -454,7 +455,7 @@ void TileMap::update(const sf::View& view)
 {
 	//~ return ;
 	//prepare onscreen tiles
-	/*
+	
 	int startX = std::floor((view.getCenter().x - view.getSize().x / 2) / tilewidth);
 	int endX = std::ceil((view.getCenter().x + view.getSize().x / 2) / tilewidth);
 	int startY = std::floor((view.getCenter().y - view.getSize().y / 2) / tileheight);
@@ -503,7 +504,7 @@ void TileMap::update(const sf::View& view)
 			}
 		}
 	}
-	*/
+	
 	
 	//prepare onscreen sprites 
 	
@@ -541,22 +542,20 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		
 	}
 	*/
-
 	
 	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
 	glLoadMatrixf( target.getView().getTransform().getMatrix() );
-	
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadIdentity();
 	glUseProgram( shaders );
 	glBindVertexArray( vertexArrayObject );
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, indexTexture);
-	glActiveTexture( GL_TEXTURE1 );
-	glBindTexture( GL_TEXTURE_2D, tilesTexture);
-	glActiveTexture( GL_TEXTURE0 );
 	glDrawArrays(GL_QUADS, 0, 4);
     glBindVertexArray( 0 );
 	glUseProgram( 0 );
-	
+	glPopMatrix();
+	glPopMatrix();
 	
 	for (const auto& object : objectsToDraw)
 	{
@@ -564,9 +563,7 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		states.texture = &tilesets[0].tilesheet;
 		target.draw((*object).sprite, states);
 	}
-	
-	
-	
+
 	/*
 	sf::Texture texture;
 	texture.loadFromFile("assets/2500.png");
@@ -754,7 +751,7 @@ void TileMap::initOpenGL() {
 	glGenVertexArrays(1, &vertexArrayObject);
 	glBindVertexArray( vertexArrayObject );
 	
-	glActiveTexture( GL_TEXTURE0 );
+	glActiveTexture( GL_TEXTURE5 );
 	glBindTexture( GL_TEXTURE_2D, indexTexture);
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &m_mapIndices[0] );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -769,7 +766,7 @@ void TileMap::initOpenGL() {
 	//~ unsigned int test[] {
 		//~ 0xff000000, 0xff00ff00, 0xff0000ff, 0xffff0000
 	//~ };
-	glActiveTexture( GL_TEXTURE1 );
+	glActiveTexture( GL_TEXTURE6 );
 	glBindTexture( GL_TEXTURE_2D, tilesTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -778,6 +775,8 @@ void TileMap::initOpenGL() {
 	//cout << "copying : " << m_tilesheet.getSize().x << endl;
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2048, ((m_ntiles>>6)+1)*32, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_tilesheet.getPixelsPtr() );
 	//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, test );
+	
+	glActiveTexture( GL_TEXTURE0 );
 	
 	float vsize = float(20480);
 	float vertx[8] = {
@@ -803,8 +802,8 @@ void TileMap::initOpenGL() {
 	GLuint tex1 = glGetUniformLocation( program, "tex1" );
 	GLuint tex2 = glGetUniformLocation( program, "tex2" );
 	
-	glUniform1i( tex1, 0 );
-	glUniform1i( tex2, 1 );
+	glUniform1i( tex1, 5 );
+	glUniform1i( tex2, 6 );
 	
 	shaders = program;
 	
