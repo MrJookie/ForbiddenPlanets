@@ -1,16 +1,6 @@
 #include "TileMap.hpp"
-#include <map>
-#include <set>
-#include <iostream>
-#include <fstream>
-using namespace std;
+
 using namespace rapidxml;
-
-bool operator<(const Tile& a, const Tile& b) { return a.flags < b.flags; }
-
-// function from shaders.cpp
-GLuint loadShaders(const char* vertexShaderFile, const char* fragmentShaderFile);
-
 
 bool TileMap::loadFromFile(std::string fileName)
 {
@@ -68,34 +58,8 @@ bool TileMap::loadFromFile(std::string fileName)
 
 	//tilesets[0].tilesheet.setSmooth(true);
 	
-	/*
-	sf::Image inputTexture = tilesets[0].tilesheet.copyToImage();
-	std::vector<sf::Uint8> tempTextureData;
-	tempTextureData.reserve(inputTexture.getSize().x * inputTexture.getSize().y * 4);
-	
-	for(std::size_t tileY = 0; tileY < inputTexture.getSize().y / tileheight; ++tileY)
-	{
-		for(std::size_t tileX = 0; tileX < inputTexture.getSize().x / tilewidth; ++tileX)
-		{
-			for(std::size_t pixelY = 0; pixelY < tileheight; ++pixelY)
-			{
-				for(std::size_t pixelX = 0; pixelX < tilewidth; ++pixelX)
-				{
-					sf::Color pixelColor = inputTexture.getPixel(32 * tileX + pixelX, 32 * tileY + pixelY);
-
-					tempTextureData.push_back(static_cast<int>(pixelColor.r));
-					tempTextureData.push_back(static_cast<int>(pixelColor.g));
-					tempTextureData.push_back(static_cast<int>(pixelColor.b));
-					tempTextureData.push_back(static_cast<int>(pixelColor.a));
-				}
-			}
-		}
-	}
-
-	sf::Image resultTexture;
-	resultTexture.create(inputTexture.getSize().x * inputTexture.getSize().y / 32, 32, &tempTextureData[0]);
-	resultTexture.saveToFile("assets/teeeeest.png");
-	*/
+	std::vector<int> mapIndices;
+	mapIndices.reserve(width * height);
 	
 	int x = 0;
 	int y = 0;
@@ -115,12 +79,9 @@ bool TileMap::loadFromFile(std::string fileName)
 		layer.name = layerElement->first_attribute("name") ? layerElement->first_attribute("name")->value() : "";
 		layer.visible = layerElement->first_attribute("visible") ? false : true;
 		layer.opacity = layerElement->first_attribute("opacity") ? atof(layerElement->first_attribute("opacity")->value()) : 1;
-		
-		
 		layer.vertices.setPrimitiveType(sf::Quads);
 		layer.vertices.resize(width * height * 4);
 		layer.verticesToDraw.setPrimitiveType(sf::Quads);
-		
 
 		//resize 2D tile array
 		layer.tiles.resize(width);
@@ -137,36 +98,28 @@ bool TileMap::loadFromFile(std::string fileName)
 		{
 			unsigned tileGID = atoll(tileElement->first_attribute("gid")->value());
 
-			
 			bool flipped_horizontally = (tileGID & FLIPPED_HORIZONTALLY_FLAG);
 			bool flipped_vertically = (tileGID & FLIPPED_VERTICALLY_FLAG);
 			bool flipped_diagonally = (tileGID & FLIPPED_DIAGONALLY_FLAG);
-			
 
-			int flags = tileGID;
 			tileGID &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
 
 			layer.tiles[x][y].gid = tileGID;
 			layer.tiles[x][y].position.x = x * tilewidth;
 			layer.tiles[x][y].position.y = y * tileheight;
 			layer.tiles[x][y].solid = (tileGID == 0) ? false : true;
-			layer.tiles[x][y].flags = flags;
 
 			//-firstgid
-			
 			int tu = (tileGID - tilesets[0].firstgid) % (tilesets[0].tilesheet.getSize().x / tilewidth);
 			int tv = (tileGID - tilesets[0].firstgid) / (tilesets[0].tilesheet.getSize().x / tilewidth);
 
 			sf::Vertex* quad = &layer.vertices[(x + y * width) * 4];
-			
-			
+
 			quad[0].color = sf::Color(255, 255, 255, 255 * layer.opacity);
 			quad[1].color = sf::Color(255, 255, 255, 255 * layer.opacity);
 			quad[2].color = sf::Color(255, 255, 255, 255 * layer.opacity);
 			quad[3].color = sf::Color(255, 255, 255, 255 * layer.opacity);
-			
 
-			
 			quad[0].position = sf::Vector2f((x + 0) * tilewidth, (y + 0) * tileheight);
 			quad[1].position = sf::Vector2f((x + 1) * tilewidth, (y + 0) * tileheight);
 			quad[2].position = sf::Vector2f((x + 1) * tilewidth, (y + 1) * tileheight);
@@ -202,14 +155,11 @@ bool TileMap::loadFromFile(std::string fileName)
 				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
 			}
 			
-			
-			/*
 			if(layerID == 0)
 			{
 				mapIndices.push_back(tileGID);
 			}
-			*/
-
+			
 			x++;
 			if (x == width)
 			{
@@ -227,104 +177,6 @@ bool TileMap::loadFromFile(std::string fileName)
 
 		layerElement = layerElement->next_sibling("layer");
 	}
-	
-	// optimization
-	unsigned int indexCounter = 0;
-	std::map<std::vector<Tile>, unsigned int> mapMultiLayerToIndex;
-	std::vector<unsigned int> mapIndices;
-	mapIndices.reserve(width * height);
-	std::vector<Tile> ml;
-	ml.resize(layers.size());
-	for(int y=0; y < height; y++) {
-		for(int x=0; x < width; x++) {
-		
-			for(int i = 0; i < layers.size(); i++) {
-				ml[i] = ( layers[i].tiles[x][y] );
-			}
-			
-			if( mapMultiLayerToIndex.find( ml ) == mapMultiLayerToIndex.end() ) {
-				mapMultiLayerToIndex.insert( std::make_pair( ml, indexCounter ) );
-				mapIndices.push_back( indexCounter );
-				indexCounter++;
-			} else {
-				mapIndices.push_back( mapMultiLayerToIndex[ ml ] );
-			}
-		}
-	}
-	
-	int ntiles = mapMultiLayerToIndex.size();
-	//~ cout << "ntiles: " << ntiles << " counter: " << indexCounter << endl;
-	//~ cout << 2048 << ", " << (((ntiles / 64)+1))*32 << endl;
-	m_tilesheet.create( 2048, ((ntiles / 64)+1)*32 );
-	
-	sf::Image *tilesheets = new sf::Image[ tilesets.size() ];
-	for(int i=0; i < tilesets.size(); i++) {
-		tilesheets[i] = tilesets[i].tilesheet.copyToImage();
-	}
-	
-	int *ts = new int[ layers.size() ];
-	sf::Vector2u *ofs = new sf::Vector2u[ layers.size() ];
-	
-	// filling up tiles
-	for(auto& iter : mapMultiLayerToIndex) {
-		for(int i = 0; i < layers.size(); i++) {
-			int gid = iter.first[i].gid;
-			if( gid == 0 ) continue;
-			ts[i] = 0;
-			for (int j = 0; j < tilesets.size(); ++j) {
-				if (gid >= tilesets[j].firstgid && ( (j + 1 > tilesets.size()) || (gid < tilesets[j+1].firstgid))) {
-					ts[i] = j;
-					break;
-				}
-			}
-			int cts = ts[i];
-			ofs[i] = sf::Vector2u( ((gid - tilesets[cts].firstgid) % (tilesheets[cts].getSize().x / tilewidth)) * tilewidth,
-								   ((gid - tilesets[cts].firstgid) / (tilesheets[cts].getSize().x / tilewidth)) * tilewidth );
-			
-		}
-		int xofs = (iter.second % 64) * 32;
-		int yofs = iter.second / 64 * 32;
-		float xc,yc;
-		for(int y = 0; y < 32; y++)
-		for(int x = 0; x < 32; x++) {
-			sf::Color p(0,0,0,255);
-			for(int i = 0; i < layers.size(); i++) {
-				if( iter.first[i].gid > 0 ) {
-					sf::Color q;
-					xc = x;
-					yc = y;
-					if(iter.first[i].flags & FLIPPED_VERTICALLY_FLAG)
-						yc = 31 - yc;
-					if(iter.first[i].flags & FLIPPED_HORIZONTALLY_FLAG)
-						xc = 31 - xc;
-					if(iter.first[i].flags & FLIPPED_DIAGONALLY_FLAG) {
-						int tmp = yc;
-						yc = xc;
-						xc = tmp;
-					}
-					q = tilesheets[ts[i]].getPixel( ofs[i].x + xc, ofs[i].y + yc );
-					float o = layers[i].opacity * float(q.a)/255.0;
-					float k = 1.0-o;
-					
-					p.r = p.r * k + q.r * o;
-					p.g = p.g * k + q.g * o;
-					p.b = p.b * k + q.b * o;
-					//p.a = p.a * k + q.a * o;
-					p.a = 255;
-					//~ p=q;
-				}
-			}
-			m_tilesheet.setPixel( xofs + x, yofs + y, p );
-		}
-	}
-	m_mapIndices = mapIndices;
-	delete[] ts;
-	delete[] ofs;
-	delete[] tilesheets;
-
-	// ---- OpenGL part
-	initOpenGL();
-	//*/
 
 	xml_node<>* objectgroupElement;
 	objectgroupElement = map->first_node("objectgroup");
@@ -452,9 +304,8 @@ std::size_t TileMap::numObjectsToDraw()
 
 void TileMap::update(const sf::View& view)
 {
-	//~ return ;
 	//prepare onscreen tiles
-	/*
+
 	int startX = std::floor((view.getCenter().x - view.getSize().x / 2) / tilewidth);
 	int endX = std::ceil((view.getCenter().x + view.getSize().x / 2) / tilewidth);
 	int startY = std::floor((view.getCenter().y - view.getSize().y / 2) / tileheight);
@@ -503,11 +354,9 @@ void TileMap::update(const sf::View& view)
 			}
 		}
 	}
-	*/
-	
+
 	//prepare onscreen sprites 
-	
-	
+
 	sf::FloatRect screenRect(
 		sf::Vector2f(view.getCenter().x - view.getSize().x / 2, view.getCenter().y - view.getSize().y / 2),
 		sf::Vector2f(view.getSize().x, view.getSize().y)
@@ -524,61 +373,23 @@ void TileMap::update(const sf::View& view)
 			}
 		}
 	}
-	
 }
 
 void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-	
-	/*
 	for (const auto& layer : layers)
 	{
 		states.transform *= getTransform();
-		
 		states.texture = &tilesets[0].tilesheet;
-		
-		target.draw(layer.verticesToDraw, states);
-		
-	}
-	*/
 
-	
-	
-	
-	
+		target.draw(layer.verticesToDraw, states);
+	}
+
 	for (const auto& object : objectsToDraw)
 	{
-		states.transform *= getTransform();
-		states.texture = &tilesets[0].tilesheet;
 		target.draw((*object).sprite, states);
 	}
-	
-	//~ glMatrixMode(GL_MODELVIEW);
-	//~ //glLoadMatrixf( states.transform.getMatrix() );
-	//~ glLoadMatrixf( target.getView().getTransform().getMatrix() );
-	//~ 
-	//~ const float *t = target.getView().getTransform().getMatrix();
-	//~ for(int i=0; i < 16; i++) {
-		//~ if(i % 4 == 0)
-			//~ cout << endl;
-		//~ cout << t[i] << " ";
-	//~ }
-	//~ cout << endl;
-	
-	//~ glMatrixMode( GL_MODELVIEW );
-	//~ glLoadIdentity();
-	//~ glMultMatrixf( states.transform.getMatrix() );
-	
-	glUseProgram( shaders );
-	glBindVertexArray( vertexArrayObject );
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, indexTexture);
-	glActiveTexture( GL_TEXTURE1 );
-	glBindTexture( GL_TEXTURE_2D, tilesTexture);
-	glActiveTexture( GL_TEXTURE0 );
-	glDrawArrays(GL_QUADS, 0, 4);
-    glBindVertexArray( 0 );
-	glUseProgram( 0 );
+
 	
 	/*
 	sf::Texture texture;
@@ -755,82 +566,4 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 
 void TileMap::PrintStateInfo(void* node)
 {
-}
-
-
-void TileMap::initOpenGL() {
-	//cout << "initgl : " << m_tilesheet.getSize().x << endl;
-	
-	glGenTextures(1, &indexTexture);
-	glGenTextures(1, &tilesTexture);
-	
-	glGenVertexArrays(1, &vertexArrayObject);
-	glBindVertexArray( vertexArrayObject );
-	
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, indexTexture);
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &m_mapIndices[0] );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
-	//~ cout << width << " , " << height << endl;
-
-	//~ fstream file("indices.bin", ios::binary | ios::out);
-	//~ file.write( (char*)&m_mapIndices[0], m_mapIndices.size() * 4 );
-	//~ file.close();
-	
-	//~ unsigned int test[] {
-		//~ 0xff000000, 0xff00ff00, 0xff0000ff, 0xffff0000
-	//~ };
-	glActiveTexture( GL_TEXTURE1 );
-	glBindTexture( GL_TEXTURE_2D, tilesTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//m_tilesheet.saveToFile("bullshit.png");
-	//cout << ntiles << endl;
-	//cout << "copying : " << m_tilesheet.getSize().x << endl;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2048, ((m_ntiles>>6)+1)*32, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_tilesheet.getPixelsPtr() );
-	//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, test );
-	
-	float vsize = float(20480);
-	float vertx[8] = {
-		0,0,
-		0,vsize,
-		vsize,vsize,
-		vsize,0
-	};
-	
-	float texsize = float(width*32);
-	float texcoords[8] = {
-		0, 0,
-		0, texsize,
-		texsize,texsize,
-		texsize,0
-	};
-	
-	
-	GLuint program = loadShaders( "assets/vertex.vert", "assets/fragment.frag" );
-	
-	vert = glGetAttribLocation( program, "vert" );
-	texcoord = glGetAttribLocation( program, "texcoord" );
-	GLuint tex1 = glGetUniformLocation( program, "tex1" );
-	GLuint tex2 = glGetUniformLocation( program, "tex2" );
-	
-	glUniform1i( tex1, 0 );
-	glUniform1i( tex2, 1 );
-	
-	shaders = program;
-	
-	GLuint vbo[2];
-	glGenBuffers(2, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertx), vertx, GL_STATIC_DRAW);
-	glVertexAttribPointer(vert, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)(0));
-	glEnableVertexAttribArray( vert );
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
-	glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)(0));
-	glEnableVertexAttribArray( texcoord );
-	glBindVertexArray( 0 );
 }

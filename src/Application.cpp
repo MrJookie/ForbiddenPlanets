@@ -68,9 +68,9 @@ void Application::createWindow(sf::Uint16 width, sf::Uint16 height, bool fullscr
 	else
 		window.create(sf::VideoMode(width, height), "Forbidden Planets");
 
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(500);
 	window.setKeyRepeatEnabled(true);
-	window.setVerticalSyncEnabled(true);
+	window.setVerticalSyncEnabled(false);
 }
 
 void Application::loadResources()
@@ -136,16 +136,18 @@ void Application::run()
         peekState()->handleInput();
 		peekState()->update(dt);
 
-        window.clear();
+        // window.clear();
 
         peekState()->draw(dt);
 		window.draw(guiFPS);
+		
 		window.draw(guiVertices);
 		window.draw(guiObjects);
 		window.draw(guiMousePosition);
 		window.draw(guiMouseWorldPosition);
 		window.draw(guiTile);
 		window.draw(guiResolution);
+		
 		
 		sfgui.Display(window);
 

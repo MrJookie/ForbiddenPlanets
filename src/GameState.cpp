@@ -8,7 +8,7 @@ screenMovementSpeed(1024)
 {
 	this->game = game;
 
-	map.loadFromFile("assets/test.tmx");
+	map.loadFromFile("assets/planet001.tmx");
 
 	onResize();
 	gridView.setCenter(0, 0); //edit this
@@ -116,15 +116,16 @@ void GameState::update(const float dt)
 	mousePosition = sf::Mouse::getPosition(game->window);
 	mouseWorldPosition = game->window.mapPixelToCoords(sf::Mouse::getPosition(game->window));
 
-	game->window.setTitle("Forbidden Planets Game " + std::to_string(1.f / dt));
+	//game->window.setTitle("Forbidden Planets Game " + std::to_string(1.f / dt));
 
+	
 	game->guiVertices.setString("VERTS: " + std::to_string(map.numVerticesToDraw()));
 	game->guiObjects.setString("OBJECTS: " + std::to_string(map.numObjectsToDraw()));
 	game->guiMousePosition.setString("X: " + std::to_string(mousePosition.x) + " Y: " + std::to_string(mousePosition.y));
 	game->guiMouseWorldPosition.setString("X: " + std::to_string(static_cast<int>(mouseWorldPosition.x)) + " Y: " + std::to_string(static_cast<int>(mouseWorldPosition.y)));
 	game->guiTile.setString("TILE: " + std::to_string(map.getTilePos(mouseWorldPosition).x) + ":" + std::to_string(map.getTilePos(mouseWorldPosition).y));
 	game->guiResolution.setString("RESOLUTION: " + std::to_string(game->window.getSize().x) + "x" + std::to_string(game->window.getSize().y));
-
+	
 	//must be before map.update();
 	moveScreen();
 
@@ -213,6 +214,7 @@ void GameState::handleInput()
 					game->window.close();
 					game->createWindow(size.x, size.y, game->fullscreen ? false : true);
 					game->fullscreen ? game->fullscreen = false : game->fullscreen = true;
+					map.initOpenGL();
 					onResize();
 				}
 				if (event.key.code == sf::Keyboard::F5) makeScreenshot();

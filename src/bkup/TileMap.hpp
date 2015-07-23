@@ -1,8 +1,7 @@
 #ifndef TILEMAP_HPP_
 #define TILEMAP_HPP_
-#define GL_GLEXT_PROTOTYPES
+
 #include <SFML/Graphics.hpp>
-#include <SFML/OpenGL.hpp>
 
 #include <string>
 #include <iostream>
@@ -31,12 +30,10 @@ public:
 class Tile
 {
 public:
-	unsigned int gid;
+	std::size_t gid;
 	bool solid;
 	sf::Vector2f position; //maybe remove?
-	int flags;
 };
-
 
 //only one big tilesheet for different layers allowed, but many tilesheets with different sizes are allowed for objects, because they will be written as sf::Sprites, not sf::VertexArray
 class Layer
@@ -48,6 +45,7 @@ public:
 	std::vector<std::vector<Tile>> tiles;
 	sf::VertexArray vertices;
 	sf::VertexArray verticesToDraw;
+
 	//set tiles[x][y].solid = false; then it wont be drawn
 };
 
@@ -90,7 +88,6 @@ public:
 	virtual void AdjacentCost(void* state, MP_VECTOR<micropather::StateCost>* adjacent);
 	virtual void PrintStateInfo(void* state);
 	std::vector<Object*> objectsToDraw;
-	void initOpenGL();
 private:
 	std::size_t width;
 	std::size_t height;
@@ -100,18 +97,6 @@ private:
 	std::vector<Tileset> tilesets;
 	std::vector<Layer> layers;
 	std::vector<Object> objects;
-	
-	
-	GLuint indexTexture;
-	GLuint tilesTexture;
-	GLuint shaders;
-	GLuint vertexArrayObject;
-	GLuint vert;
-	GLuint texcoord;
-	GLuint vbo[2];
-	sf::Image m_tilesheet;
-	std::vector<unsigned int> m_mapIndices;
-	int m_ntiles;
 };
 
 #endif /* TILEMAP_HPP_ */
