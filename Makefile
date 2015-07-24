@@ -29,6 +29,7 @@ cpp := 	\
 exe := Release/ForbiddenPlanets
 
 build := build
+flags := -O2
 
 obj := $(addprefix $(build)/, $(patsubst %.cpp,%.o,$(cpp)))
 
@@ -45,7 +46,7 @@ make_dirs:
 	@mkdir -p $(build)/src/Micropather
 
 $(exe): $(obj)
-	g++ $^ -o $(exe) $(link) $(arch) -pthread
+	g++ $^ -o $(exe) $(link) $(arch) -pthread 
 
 $(build)/%.o: %.cpp
-	g++ -c $< -o $@ -std=c++11 $(inc) $(arch)  -pthread
+	g++ -c $< -o $@ -std=c++11 $(inc) $(arch)  -pthread $(flags)

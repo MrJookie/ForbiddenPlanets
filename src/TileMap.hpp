@@ -32,9 +32,8 @@ class Tile
 {
 public:
 	unsigned int gid;
-	bool solid;
-	sf::Vector2f position; //maybe remove?
 	int flags;
+	bool solid;
 };
 
 
@@ -46,8 +45,6 @@ public:
 	bool visible;
 	float opacity;
 	std::vector<std::vector<Tile>> tiles;
-	sf::VertexArray vertices;
-	sf::VertexArray verticesToDraw;
 	//set tiles[x][y].solid = false; then it wont be drawn
 };
 
@@ -63,17 +60,26 @@ public:
 	bool visible;
 };
 
+class ObjectExport
+{
+public:
+	int name;
+	std::size_t gid;
+	bool visible;
+	//float x,y;
+	sf::Vector2f pos;
+	float rotation;
+};
+
 class TileMap : public sf::Drawable, public micropather::Graph
 {
 public:
 	bool loadFromFile(std::string fileName);
-	std::size_t numVerticesToDraw();
+	void loadFromBinary(std::string fileName);
 	std::size_t numObjectsToDraw();
 	sf::Vector2i getTileSize();
-	void editTile(int x, int y);
 	bool objectAtTile(int x, int y);
 	sf::Vector2i getTilePos(sf::Vector2f position);
-	Tile& getTileAt(sf::Vector2f position);
 	bool tileWalkable(int nx, int ny);
 	void pathNodeToXY(void* node, int* x, int* y);
 	void* pathXYToNode(int x, int y);
@@ -100,7 +106,6 @@ private:
 	std::vector<Tileset> tilesets;
 	std::vector<Layer> layers;
 	std::vector<Object> objects;
-	
 	
 	GLuint indexTexture;
 	GLuint tilesTexture;

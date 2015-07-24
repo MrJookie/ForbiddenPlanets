@@ -11,7 +11,7 @@ void main() {
 	ivec2 indxs = ivec2(texCoord) >> 5;
 	ivec2 diff = (ivec2(texCoord) - (indxs << 5));
 	
-	int r = texelFetch( tex1, indxs, 0 ).r;
+	int r = texelFetch( tex1, indxs, 0 ).r & 0xfff;
 	int y = (r >> 6);
 	int x = r - (y << 6);
 	color = texelFetch( tex2, ivec2( (x << 5) + diff[0], (y << 5) + diff[1] ), 0 );

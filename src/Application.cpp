@@ -56,13 +56,13 @@ void Application::createWindow(sf::Uint16 width, sf::Uint16 height, bool fullscr
 {
 	sf::VideoMode videoMode = sf::VideoMode::getDesktopMode();
 
-	//sf::ContextSettings contextSettings;
+	sf::ContextSettings contextSettings;
 	//contextSettings.antialiasingLevel = 8;
 
 	//move this later to menu settings, so user can set his own video mode
 	//std::vector<sf::VideoMode> fullscreenVideoModes;
 	//fullscreenVideoModes = sf::VideoMode::getFullscreenModes();
-
+	
 	if (fullscreen)
 		window.create(sf::VideoMode(videoMode), "Forbidden Planets", sf::Style::Fullscreen);
 	else

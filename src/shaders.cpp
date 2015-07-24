@@ -64,7 +64,7 @@ GLuint loadShaders(const char* vertexShaderFile, const char* fragmentShaderFile)
 	
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 	
-	cout << "compilation: " << (status == GL_TRUE) << endl;
+	//cout << "compilation: " << (status == GL_TRUE) << endl;
 	//~ 
 	if(status != GL_TRUE) {
 		char buffer[512];
@@ -77,7 +77,7 @@ GLuint loadShaders(const char* vertexShaderFile, const char* fragmentShaderFile)
 	
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
 	
-	cout << "compilation: " << (status == GL_TRUE) << endl;
+	//cout << "compilation: " << (status == GL_TRUE) << endl;
 	
 	if(status != GL_TRUE) {
 		char buffer[512];

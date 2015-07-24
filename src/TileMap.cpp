@@ -48,62 +48,20 @@ bool TileMap::loadFromFile(std::string fileName)
 			return false;
 		}
 
-		//tileset.tilesheet.setSmooth(true);
-
 		tilesets.push_back(tileset);
-
-		/*
-		std::cout << tileset.firstgid << std::endl;
-		std::cout << tileset.name << std::endl;
-		std::cout << tileset.tilewidth << std::endl;
-		std::cout << tileset.tileheight << std::endl;
-		std::cout << tileset.source << std::endl;
-		std::cout << tileset.sourcewidth << std::endl;
-		std::cout << tileset.sourceheight << std::endl;
-		std::cout << "-----" << std::endl;
-		*/
-
 		tilesetElement = tilesetElement->next_sibling("tileset");
 	}
 
-	//tilesets[0].tilesheet.setSmooth(true);
-	
-	/*
-	sf::Image inputTexture = tilesets[0].tilesheet.copyToImage();
-	std::vector<sf::Uint8> tempTextureData;
-	tempTextureData.reserve(inputTexture.getSize().x * inputTexture.getSize().y * 4);
-	
-	for(std::size_t tileY = 0; tileY < inputTexture.getSize().y / tileheight; ++tileY)
-	{
-		for(std::size_t tileX = 0; tileX < inputTexture.getSize().x / tilewidth; ++tileX)
-		{
-			for(std::size_t pixelY = 0; pixelY < tileheight; ++pixelY)
-			{
-				for(std::size_t pixelX = 0; pixelX < tilewidth; ++pixelX)
-				{
-					sf::Color pixelColor = inputTexture.getPixel(32 * tileX + pixelX, 32 * tileY + pixelY);
 
-					tempTextureData.push_back(static_cast<int>(pixelColor.r));
-					tempTextureData.push_back(static_cast<int>(pixelColor.g));
-					tempTextureData.push_back(static_cast<int>(pixelColor.b));
-					tempTextureData.push_back(static_cast<int>(pixelColor.a));
-				}
-			}
-		}
-	}
-
-	sf::Image resultTexture;
-	resultTexture.create(inputTexture.getSize().x * inputTexture.getSize().y / 32, 32, &tempTextureData[0]);
-	resultTexture.saveToFile("assets/teeeeest.png");
-	*/
-	
 	int x = 0;
 	int y = 0;
 
 	//obtain TILED GID from flipped tiles
-	const unsigned FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-	const unsigned FLIPPED_VERTICALLY_FLAG = 0x40000000;
-	const unsigned FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+	const unsigned FLIPPED_HORIZONTALLY_FLAG = 	0x80000000;
+	const unsigned FLIPPED_VERTICALLY_FLAG = 	0x40000000;
+	const unsigned FLIPPED_DIAGONALLY_FLAG = 	0x20000000;
+	// tilesize must be 32 for map rendering
+	const int cTilesize = 32;
 	
 	int layerID = 0;
 
@@ -115,12 +73,7 @@ bool TileMap::loadFromFile(std::string fileName)
 		layer.name = layerElement->first_attribute("name") ? layerElement->first_attribute("name")->value() : "";
 		layer.visible = layerElement->first_attribute("visible") ? false : true;
 		layer.opacity = layerElement->first_attribute("opacity") ? atof(layerElement->first_attribute("opacity")->value()) : 1;
-		
-		
-		layer.vertices.setPrimitiveType(sf::Quads);
-		layer.vertices.resize(width * height * 4);
-		layer.verticesToDraw.setPrimitiveType(sf::Quads);
-		
+
 
 		//resize 2D tile array
 		layer.tiles.resize(width);
@@ -136,80 +89,10 @@ bool TileMap::loadFromFile(std::string fileName)
 		while (tileElement)
 		{
 			unsigned tileGID = atoll(tileElement->first_attribute("gid")->value());
-
-			
-			bool flipped_horizontally = (tileGID & FLIPPED_HORIZONTALLY_FLAG);
-			bool flipped_vertically = (tileGID & FLIPPED_VERTICALLY_FLAG);
-			bool flipped_diagonally = (tileGID & FLIPPED_DIAGONALLY_FLAG);
-			
-
-			int flags = tileGID;
-			tileGID &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
-
-			layer.tiles[x][y].gid = tileGID;
-			layer.tiles[x][y].position.x = x * tilewidth;
-			layer.tiles[x][y].position.y = y * tileheight;
-			layer.tiles[x][y].solid = (tileGID == 0) ? false : true;
-			layer.tiles[x][y].flags = flags;
-
-			//-firstgid
-			
-			int tu = (tileGID - tilesets[0].firstgid) % (tilesets[0].tilesheet.getSize().x / tilewidth);
-			int tv = (tileGID - tilesets[0].firstgid) / (tilesets[0].tilesheet.getSize().x / tilewidth);
-
-			sf::Vertex* quad = &layer.vertices[(x + y * width) * 4];
-			
-			
-			quad[0].color = sf::Color(255, 255, 255, 255 * layer.opacity);
-			quad[1].color = sf::Color(255, 255, 255, 255 * layer.opacity);
-			quad[2].color = sf::Color(255, 255, 255, 255 * layer.opacity);
-			quad[3].color = sf::Color(255, 255, 255, 255 * layer.opacity);
-			
-
-			
-			quad[0].position = sf::Vector2f((x + 0) * tilewidth, (y + 0) * tileheight);
-			quad[1].position = sf::Vector2f((x + 1) * tilewidth, (y + 0) * tileheight);
-			quad[2].position = sf::Vector2f((x + 1) * tilewidth, (y + 1) * tileheight);
-			quad[3].position = sf::Vector2f((x + 0) * tilewidth, (y + 1) * tileheight);
-
-			// - 0.0075 to prevent tearing on zoomed view: http://en.sfml-dev.org/forums/index.php?topic=6665.0
-			if (flipped_horizontally && flipped_diagonally)
-			{
-				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight);
-				quad[1].texCoords = sf::Vector2f((tu + 0) * tilewidth - 0.0075, (tv + 0) * tileheight);
-				quad[2].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 0) * tileheight - 0.0075);
-				quad[3].texCoords = sf::Vector2f((tu + 1) * tilewidth, (tv + 1) * tileheight - 0.0075);
-			} 
-			else if (flipped_vertically && flipped_diagonally)
-			{
-				quad[0].texCoords = sf::Vector2f((tu + 1) * tilewidth, (tv + 0) * tileheight);
-				quad[1].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 1) * tileheight);
-				quad[2].texCoords = sf::Vector2f((tu + 0) * tilewidth - 0.0075, (tv + 1) * tileheight - 0.0075);
-				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * tileheight - 0.0075);
-			}
-			else if (flipped_horizontally && flipped_vertically)
-			{
-				quad[0].texCoords = sf::Vector2f((tu + 1) * tilewidth, (tv + 1) * tileheight);
-				quad[1].texCoords = sf::Vector2f((tu + 0) * tilewidth - 0.0075, (tv + 1) * tileheight);
-				quad[2].texCoords = sf::Vector2f((tu + 0) * tilewidth - 0.0075, (tv + 0) * tileheight - 0.0075);
-				quad[3].texCoords = sf::Vector2f((tu + 1) * tilewidth, (tv + 0) * tileheight - 0.0075);
-			}
-			else  //no rotation
-			{
-				quad[0].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 0) * tileheight);
-				quad[1].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 0) * tileheight);
-				quad[2].texCoords = sf::Vector2f((tu + 1) * tilewidth - 0.0075, (tv + 1) * tileheight - 0.0075);
-				quad[3].texCoords = sf::Vector2f((tu + 0) * tilewidth, (tv + 1) * tileheight - 0.0075);
-			}
-			
-			
-			/*
-			if(layerID == 0)
-			{
-				mapIndices.push_back(tileGID);
-			}
-			*/
-
+			// gid with flags is good for uniquelly identifying tile (rotated tile is new tile)
+			layer.tiles[x][y].flags = tileGID;
+			layer.tiles[x][y].gid = tileGID & ~( FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG );
+			layer.tiles[x][y].solid = (tileGID != 0);
 			x++;
 			if (x == width)
 			{
@@ -228,7 +111,7 @@ bool TileMap::loadFromFile(std::string fileName)
 		layerElement = layerElement->next_sibling("layer");
 	}
 	
-	// optimization
+	// loading all tiles into tilesheet and indices for use in shader
 	unsigned int indexCounter = 0;
 	std::map<std::vector<Tile>, unsigned int> mapMultiLayerToIndex;
 	std::vector<unsigned int> mapIndices;
@@ -237,63 +120,77 @@ bool TileMap::loadFromFile(std::string fileName)
 	ml.resize(layers.size());
 	for(int y=0; y < height; y++) {
 		for(int x=0; x < width; x++) {
-		
+			// build tile id from using all layers
 			for(int i = 0; i < layers.size(); i++) {
 				ml[i] = ( layers[i].tiles[x][y] );
 			}
 			
+			// if not already queued for processing, add it otherwise just add already used index
 			if( mapMultiLayerToIndex.find( ml ) == mapMultiLayerToIndex.end() ) {
 				mapMultiLayerToIndex.insert( std::make_pair( ml, indexCounter ) );
-				mapIndices.push_back( indexCounter );
+				mapIndices.push_back( (ml[1].solid ? 0x80000000U : 0) | indexCounter );
 				indexCounter++;
 			} else {
-				mapIndices.push_back( mapMultiLayerToIndex[ ml ] );
+				mapIndices.push_back( (ml[1].solid ? 0x80000000U : 0) | mapMultiLayerToIndex[ ml ] );
 			}
 		}
 	}
-	
+	const int tilesheet_width = 2048;
+	const int n_tiles_per_width = 64;
 	int ntiles = mapMultiLayerToIndex.size();
-	m_ntiles = ntiles;
-	//~ cout << "ntiles: " << ntiles << " counter: " << indexCounter << endl;
-	//~ cout << 2048 << ", " << (((ntiles / 64)+1))*32 << endl;
-	m_tilesheet.create( 2048, ((ntiles / 64)+1)*32 );
+	m_tilesheet.create( tilesheet_width, ((ntiles / n_tiles_per_width)+1)*cTilesize );
 	
+	// copy all tilesets from texture to image for reading pixels
 	sf::Image *tilesheets = new sf::Image[ tilesets.size() ];
 	for(int i=0; i < tilesets.size(); i++) {
 		tilesheets[i] = tilesets[i].tilesheet.copyToImage();
 	}
 	
+	// tileset selector
 	int *ts = new int[ layers.size() ];
+	// offset for each tiles from layers
 	sf::Vector2u *ofs = new sf::Vector2u[ layers.size() ];
 	
 	// filling up tiles
 	for(auto& iter : mapMultiLayerToIndex) {
 		for(int i = 0; i < layers.size(); i++) {
 			int gid = iter.first[i].gid;
+			
+			// gid equal 0 is not drawn at all
 			if( gid == 0 ) continue;
+			
+			// check which tileset is this tile in
 			ts[i] = 0;
+			
 			for (int j = 0; j < tilesets.size(); ++j) {
 				if (gid >= tilesets[j].firstgid && ( (j + 1 > tilesets.size()) || (gid < tilesets[j+1].firstgid))) {
 					ts[i] = j;
 					break;
 				}
 			}
+			
 			int cts = ts[i];
+			// find offset for getting tile from tilesheet
 			ofs[i] = sf::Vector2u( ((gid - tilesets[cts].firstgid) % (tilesheets[cts].getSize().x / tilewidth)) * tilewidth,
 								   ((gid - tilesets[cts].firstgid) / (tilesheets[cts].getSize().x / tilewidth)) * tilewidth );
 			
 		}
-		int xofs = (iter.second % 64) * 32;
-		int yofs = iter.second / 64 * 32;
+		// 
+		int xofs = (iter.second % n_tiles_per_width) * cTilesize;
+		int yofs = iter.second / n_tiles_per_width * cTilesize;
 		float xc,yc;
-		for(int y = 0; y < 32; y++)
-		for(int x = 0; x < 32; x++) {
+		for(int y = 0; y < cTilesize; y++)
+		for(int x = 0; x < cTilesize; x++) {
+			
 			sf::Color p(0,0,0,255);
 			for(int i = 0; i < layers.size(); i++) {
+				
 				if( iter.first[i].gid > 0 ) {
 					sf::Color q;
 					xc = x;
 					yc = y;
+					
+					// image flipping
 					if(iter.first[i].flags & FLIPPED_VERTICALLY_FLAG)
 						yc = 31 - yc;
 					if(iter.first[i].flags & FLIPPED_HORIZONTALLY_FLAG)
@@ -303,21 +200,22 @@ bool TileMap::loadFromFile(std::string fileName)
 						yc = xc;
 						xc = tmp;
 					}
+					
+					// merge 2 layers
 					q = tilesheets[ts[i]].getPixel( ofs[i].x + xc, ofs[i].y + yc );
 					float o = layers[i].opacity * float(q.a)/255.0;
 					float k = 1.0-o;
-					
 					p.r = p.r * k + q.r * o;
 					p.g = p.g * k + q.g * o;
 					p.b = p.b * k + q.b * o;
-					//p.a = p.a * k + q.a * o;
-					//p.a = 255;
-					//~ p=q;
+					
 				}
 			}
+			// write pixel to new single tilesheet
 			m_tilesheet.setPixel( xofs + x, yofs + y, p );
 		}
 	}
+	m_ntiles = ntiles;
 	m_mapIndices = mapIndices;
 	delete[] ts;
 	delete[] ofs;
@@ -325,7 +223,6 @@ bool TileMap::loadFromFile(std::string fileName)
 
 	// ---- OpenGL part
 	initOpenGL();
-	//*/
 
 	xml_node<>* objectgroupElement;
 	objectgroupElement = map->first_node("objectgroup");
@@ -384,8 +281,6 @@ bool TileMap::loadFromFile(std::string fileName)
 
 		objectgroupElement = objectgroupElement->next_sibling("objectgroup");
 	}
-	
-	//glTexImage2D( GL_TEXTURE_2D, 0, GL_R8I, 640, 640, 0, GL_RED_INTEGER, GL_INT, tiles );
 
 	//stress MicroPather
 	//allocate 640x640 states
@@ -394,56 +289,129 @@ bool TileMap::loadFromFile(std::string fileName)
 	return true;
 }
 
+void TileMap::loadFromBinary(std::string fileName) {
+	
+	/*
+		FILE STRUCTURE:
+			width
+			height
+			indices.size
+			indices
+			ntiles
+			tilesheet.x
+			tilesheet.y
+			tilesheet.data
+			tilesets.size
+			--- loop (n tilesets) ---
+			tileset.source char index
+			tileset.tilewidth
+			tileset.tileheight
+			objects.size
+			objects.data
+			-------------------------
+			strings
+	*/
+	std::ifstream infile( fileName, std::ifstream::binary );
+	#define GET_UINT( uint ) infile.read( (char*)&uint, sizeof(unsigned int) );
+	// load indices
+	int nindices;
+	GET_UINT( width );
+	GET_UINT( height );
+	GET_UINT( nindices );
+	m_mapIndices.resize( nindices );
+	infile.read( (char*)&m_mapIndices[0], sizeof(unsigned int) * nindices );
+	// load tilesheet
+	int ts_x, ts_y;
+	GET_UINT( m_ntiles );
+	GET_UINT( ts_x );
+	GET_UINT( ts_y );
+	//sf::Image tilesheet;
+	int img_memsize = ts_x * sizeof(unsigned int) * ts_y * sizeof(unsigned int);
+	char* img_data = new char[ img_memsize  ];
+	infile.read( img_data, img_memsize );
+	//cout << ntiles << " " << ts_x << " " << ts_y << endl;
+	m_tilesheet.create( ts_x, ts_y, (unsigned char*)img_data );
+	delete[] img_data;
+	
+	// load tilesets with objects
+	int ntilesets;
+	GET_UINT( ntilesets );
+	tilesets.resize( ntilesets );
+	//cout << "loading " << ntilesets << " tilesets" << endl;
+	std::vector<std::vector<ObjectExport>> tilesetObjects(ntilesets);
+	
+	for(int i = 0; i < ntilesets; i++) {
+		GET_UINT( tilesets[i].firstgid );
+		GET_UINT( tilesets[i].tilewidth );
+		GET_UINT( tilesets[i].tileheight );
+		int objsize;
+		GET_UINT( objsize );
+		//cout << "objsize: " << objsize << endl;
+		tilesetObjects[i].resize(objsize);
+		infile.read( (char*)&tilesetObjects[i][0], sizeof(ObjectExport) * objsize );
+	}
+	
+	
+	// load strings
+	int curpos = infile.tellg();
+	//cout << curpos << endl;
+	if(curpos < 0) return;
+	infile.seekg( 0, infile.end );
+	int endpos = infile.tellg();
+	int len = endpos - curpos;
+	infile.seekg( curpos );
+	char* strings = new char[ len ];
+	infile.read( strings, len );
+	infile.close();
+	unsigned int  cTilesize = 32;
+	// load tileset tilesheets (use firstgid for strings offset)
+	for(int i = 0; i < ntilesets; i++) {
+		std::string fn( &strings[ tilesets[i].firstgid ] );
+		//cout << "Loading " << fn << endl;
+		if(!tilesets[i].tilesheet.loadFromFile( "assets/" + fn )) {
+			return;
+		}
+		for(const auto& objexp : tilesetObjects[i]) {
+			// TODO: write rest of object calculation and preparation for rendering
+			int tu = (objexp.gid) % (tilesets[i].tilesheet.getSize().x / tilesets[i].tilewidth);
+			int tv = (objexp.gid) / (tilesets[i].tilesheet.getSize().x / tilesets[i].tilewidth);
+			
+			sf::Sprite sprite;
+			sprite.setTexture(tilesets[i].tilesheet);
+			sprite.setTextureRect(sf::Rect<int>(tu * tilesets[i].tilewidth, tv * tilesets[i].tileheight, tilesets[i].tilewidth, tilesets[i].tileheight));
+			//-tileheight to correct tiled sprite position, 0,0 tile stores position 0,tileheight
+			sprite.setPosition(objexp.pos.x, objexp.pos.y - tilesets[i].tileheight);
+			if( objexp.rotation != 0 ) {
+				sprite.setPosition(objexp.pos.x, objexp.pos.y);
+				sprite.setOrigin(0, tilesets[i].tileheight);
+				sprite.setRotation(objexp.rotation);
+			}
+			
+			Object object;
+			object.name = &strings[ objexp.name ];
+			object.visible = objexp.visible;
+			object.sprite = sprite;
+
+			objects.push_back(object);
+		}
+	}
+	delete[] strings;
+	tilewidth = tileheight = 32;
+	pather = new micropather::MicroPather(this, width * height, 8, false);
+	// init gl
+	initOpenGL();
+}
+
+
 sf::Vector2i TileMap::getTileSize()
 {
 	return (sf::Vector2i(tilewidth, tileheight));
 }
 
-void TileMap::editTile(int x, int y)
-{
-	//layers[0].tiles[x][y].name = "";
-	/* //remake
-	layers[0].vertices[(x + y * width) * 4 + 0].position = sf::Vector2f(0, 0);
-	layers[0].vertices[(x + y * width) * 4 + 1].position = sf::Vector2f(0, 0);
-	layers[0].vertices[(x + y * width) * 4 + 2].position = sf::Vector2f(0, 0);
-	layers[0].vertices[(x + y * width) * 4 + 3].position = sf::Vector2f(0, 0);
-	*/
-}
-
-Tile& TileMap::getTileAt(sf::Vector2f position)
-{
-	std::size_t x = std::floor(position.x / tilewidth);
-	std::size_t y = std::floor(position.y / tileheight);
-
-	for (auto& layer : layers)
-	{
-		if (layer.visible)
-		{
-			if (layer.tiles[x][y].solid)
-			{
-				return layer.tiles[x][y];
-			}
-		}
-	}
-
-	return layers[0].tiles[x][y];
-}
 
 sf::Vector2i TileMap::getTilePos(sf::Vector2f position)
 {
 	return sf::Vector2i(std::floor(position.x / tilewidth), std::floor(position.y / tileheight));
-}
-
-//only VertexArray vertices, not counted Object(sprite) vertices
-std::size_t TileMap::numVerticesToDraw()
-{
-	std::size_t verts = 0;
-	for (const auto& layer : layers)
-	{
-		verts += layer.verticesToDraw.getVertexCount();
-	}
-
-	return verts;
 }
 
 std::size_t TileMap::numObjectsToDraw()
@@ -453,62 +421,7 @@ std::size_t TileMap::numObjectsToDraw()
 
 void TileMap::update(const sf::View& view)
 {
-	//~ return ;
-	//prepare onscreen tiles
-	
-	int startX = std::floor((view.getCenter().x - view.getSize().x / 2) / tilewidth);
-	int endX = std::ceil((view.getCenter().x + view.getSize().x / 2) / tilewidth);
-	int startY = std::floor((view.getCenter().y - view.getSize().y / 2) / tileheight);
-	int endY = std::ceil((view.getCenter().y + view.getSize().y / 2) / tileheight);
-
-	//std::cout << "startX: " << startX << " endX: " << endX << " startY: " << startY << " endY: " << endY << std::endl;
-
-	if (startX > width)
-		startX = 0; //width
-	if (startX < 0)
-		startX = 0;
-
-	if (startY > height)
-		startY = 0; //height
-	if (startY < 0)
-		startY = 0;
-
-	if (endY > height)
-		endY = height;
-	if (endY < 0)
-		endY = 0;
-
-	if (endX > width)
-		endX = width;
-	if (endX < 0)
-		endX = 0;
-
-	for (auto& layer : layers)
-	{
-		if (layer.visible)
-		{
-			layer.verticesToDraw.clear();
-
-			for (int x = startX; x < endX; ++x)
-			{
-				for (int y = startY; y < endY; ++y)
-				{
-					if (layer.tiles[x][y].solid)
-					{
-						layer.verticesToDraw.append(layer.vertices[(x + y * width) * 4 + 0]);
-						layer.verticesToDraw.append(layer.vertices[(x + y * width) * 4 + 1]);
-						layer.verticesToDraw.append(layer.vertices[(x + y * width) * 4 + 2]);
-						layer.verticesToDraw.append(layer.vertices[(x + y * width) * 4 + 3]);
-					}
-				}
-			}
-		}
-	}
-	
-	
 	//prepare onscreen sprites 
-	
-	
 	sf::FloatRect screenRect(
 		sf::Vector2f(view.getCenter().x - view.getSize().x / 2, view.getCenter().y - view.getSize().y / 2),
 		sf::Vector2f(view.getSize().x, view.getSize().y)
@@ -531,18 +444,6 @@ void TileMap::update(const sf::View& view)
 void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	
-	/*
-	for (const auto& layer : layers)
-	{
-		states.transform *= getTransform();
-		
-		states.texture = &tilesets[0].tilesheet;
-		
-		target.draw(layer.verticesToDraw, states);
-		
-	}
-	*/
-	
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadMatrixf( target.getView().getTransform().getMatrix() );
@@ -564,17 +465,6 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		target.draw((*object).sprite, states);
 	}
 
-	/*
-	sf::Texture texture;
-	texture.loadFromFile("assets/2500.png");
-	texture.setSmooth(false);
-
-	sf::Sprite sprite;
-	sprite.setTexture(texture);
-	sprite.setTextureRect(sf::IntRect(0, 0, 512, 512));
-
-	target.draw(sprite);
-	*/
 }
 
 bool TileMap::startPathfinding(sf::Vector2i startPosition, sf::Vector2i finishPosition, micropather::MPVector<void*>& movementPath)
@@ -635,7 +525,8 @@ bool TileMap::tileWalkable(int nx, int ny)
 {
 	if (nx >= 0 && nx < width && ny >= 0 && ny < height)
 	{
-		if (!layers[1].tiles[nx][ny].solid && !objectAtTile(nx, ny))
+		// !layers[1].tiles[nx][ny].solid
+		if ( !(m_mapIndices[ nx + ny*width ] & 0x80000000) && !objectAtTile(nx, ny))
 			return true;
 	}
 
@@ -679,7 +570,8 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 	int x, y;
 	const int dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 	const int dy[8] = { 0, 1, 1, 1, 0, -1, -1, -1 };
-	const float cost[8] = { 1.0, 1.41, 1.0, 1.41, 1.0, 1.41, 1.0, 1.41 };
+	//const float cost[8] = { 1.0, 1.41, 1.0, 1.41, 1.0, 1.41, 1.0, 1.41 };
+	const float cost[8] = { 1.0, 1, 1.0, 1, 1.0, 1, 1.0, 1 };
 
 	pathNodeToXY(node, &x, &y);
 
@@ -692,7 +584,7 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 			{
 			case 1:
 				//std::cout << "diagonal down right" << std::endl;
-				if (tileWalkable(nx - 1, ny) && tileWalkable(nx, ny - 1))
+				if (tileWalkable(nx - 1, ny) || tileWalkable(nx, ny - 1))
 				{
 					micropather::StateCost nodeCost = { pathXYToNode(nx, ny), cost[i] };
 					neighbors->push_back(nodeCost);
@@ -701,7 +593,7 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 
 			case 3:
 				//std::cout << "diagonal down left" << std::endl;
-				if (tileWalkable(nx + 1, ny) && tileWalkable(nx, ny - 1))
+				if (tileWalkable(nx + 1, ny) || tileWalkable(nx, ny - 1))
 				{
 					micropather::StateCost nodeCost = { pathXYToNode(nx, ny), cost[i] };
 					neighbors->push_back(nodeCost);
@@ -710,7 +602,7 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 
 			case 5:
 				//std::cout << "diagonal up left" << std::endl;
-				if (tileWalkable(nx + 1, ny) && tileWalkable(nx, ny + 1))
+				if (tileWalkable(nx + 1, ny) || tileWalkable(nx, ny + 1))
 				{
 					micropather::StateCost nodeCost = { pathXYToNode(nx, ny), cost[i] };
 					neighbors->push_back(nodeCost);
@@ -719,7 +611,7 @@ void TileMap::AdjacentCost(void* node, micropather::MPVector<micropather::StateC
 
 			case 7:
 				//std::cout << "diagonal up right" << std::endl;
-				if (tileWalkable(nx - 1, ny) && tileWalkable(nx, ny + 1))
+				if (tileWalkable(nx - 1, ny) || tileWalkable(nx, ny + 1))
 				{
 					micropather::StateCost nodeCost = { pathXYToNode(nx, ny), cost[i] };
 					neighbors->push_back(nodeCost);
@@ -743,7 +635,6 @@ void TileMap::PrintStateInfo(void* node)
 
 
 void TileMap::initOpenGL() {
-	//cout << "initgl : " << m_tilesheet.getSize().x << endl;
 	
 	glGenTextures(1, &indexTexture);
 	glGenTextures(1, &tilesTexture);
@@ -751,33 +642,36 @@ void TileMap::initOpenGL() {
 	glGenVertexArrays(1, &vertexArrayObject);
 	glBindVertexArray( vertexArrayObject );
 	
+	// bind textures to some unit hopefully not used by sfml
 	glActiveTexture( GL_TEXTURE5 );
 	glBindTexture( GL_TEXTURE_2D, indexTexture);
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &m_mapIndices[0] );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &m_mapIndices[0] );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
-	//~ cout << width << " , " << height << endl;
 
-	//~ fstream file("indices.bin", ios::binary | ios::out);
-	//~ file.write( (char*)&m_mapIndices[0], m_mapIndices.size() * 4 );
-	//~ file.close();
-	
-	//~ unsigned int test[] {
-		//~ 0xff000000, 0xff00ff00, 0xff0000ff, 0xffff0000
-	//~ };
 	glActiveTexture( GL_TEXTURE6 );
 	glBindTexture( GL_TEXTURE_2D, tilesTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//m_tilesheet.saveToFile("bullshit.png");
-	//cout << ntiles << endl;
-	//cout << "copying : " << m_tilesheet.getSize().x << endl;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2048, ((m_ntiles>>6)+1)*32, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_tilesheet.getPixelsPtr() );
-	//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, test );
-	
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 2048, ( (m_ntiles / 64) + 1) * 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_tilesheet.getPixelsPtr() );
+
 	glActiveTexture( GL_TEXTURE0 );
 	
+	// load shaders
+	GLuint program = loadShaders( "assets/vertex.vert", "assets/fragment.frag" );
+	
+	// load attributes and uniforms
+	vert = glGetAttribLocation( program, "vert" );
+	texcoord = glGetAttribLocation( program, "texcoord" );
+	GLuint tex1 = glGetUniformLocation( program, "tex1" );
+	GLuint tex2 = glGetUniformLocation( program, "tex2" );
+	glUniform1i( tex1, 5 );
+	glUniform1i( tex2, 6 );
+	
+	shaders = program;
+	
+	// load VBO-s
 	float vsize = float(20480);
 	float vertx[8] = {
 		0,0,
@@ -793,19 +687,6 @@ void TileMap::initOpenGL() {
 		texsize,texsize,
 		texsize,0
 	};
-	
-	
-	GLuint program = loadShaders( "assets/vertex.vert", "assets/fragment.frag" );
-	
-	vert = glGetAttribLocation( program, "vert" );
-	texcoord = glGetAttribLocation( program, "texcoord" );
-	GLuint tex1 = glGetUniformLocation( program, "tex1" );
-	GLuint tex2 = glGetUniformLocation( program, "tex2" );
-	
-	glUniform1i( tex1, 5 );
-	glUniform1i( tex2, 6 );
-	
-	shaders = program;
 	
 	GLuint vbo[2];
 	glGenBuffers(2, vbo);

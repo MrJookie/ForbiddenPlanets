@@ -8,7 +8,8 @@ screenMovementSpeed(1024)
 {
 	this->game = game;
 
-	map.loadFromFile("assets/planet001.tmx");
+	//map.loadFromFile("assets/planet001.tmx");
+	map.loadFromBinary("assets/planet001.map");
 
 	onResize();
 	gridView.setCenter(0, 0); //edit this
@@ -119,7 +120,7 @@ void GameState::update(const float dt)
 	//game->window.setTitle("Forbidden Planets Game " + std::to_string(1.f / dt));
 
 	
-	game->guiVertices.setString("VERTS: " + std::to_string(map.numVerticesToDraw()));
+	//game->guiVertices.setString("VERTS: " + std::to_string(map.numVerticesToDraw()));
 	game->guiObjects.setString("OBJECTS: " + std::to_string(map.numObjectsToDraw()));
 	game->guiMousePosition.setString("X: " + std::to_string(mousePosition.x) + " Y: " + std::to_string(mousePosition.y));
 	game->guiMouseWorldPosition.setString("X: " + std::to_string(static_cast<int>(mouseWorldPosition.x)) + " Y: " + std::to_string(static_cast<int>(mouseWorldPosition.y)));
